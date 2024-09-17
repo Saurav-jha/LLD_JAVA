@@ -52,5 +52,13 @@ public class Database {
             System.out.println(table.selectAll());
         }
     }
-    
+
+    public void selectByPrimaryKey(String tableName, Object primaryKeyValue) {
+        Table table = tables.get(tableName);
+        if (table != null) {
+            Row result = table.selectByPrimaryKey(primaryKeyValue);
+            System.out.println(result);
+        }
+    }
+
 }

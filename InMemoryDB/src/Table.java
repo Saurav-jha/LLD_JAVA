@@ -5,12 +5,14 @@ public class Table {
     private List<Row> rows;
     private Column primaryKeyCol;
     private Set<Object> primaryKeys;
+    private Index primaryKeyIndex;
 
     public Table(String name){
         this.name = name;
         this.columns = new ArrayList<>();
         this.rows = new ArrayList<>();
         this.primaryKeys = new HashSet<>();
+        this.primaryKeyIndex = new Index();
     }
 
     public void addColumn(String name, DataType type, int length, boolean isPrimaryKey){
@@ -27,25 +29,31 @@ public class Table {
             if(primaryKeys.contains(primaryKeyValue)){
                 throw new Exception("Primary key constraints voilated");
             }
-            primaryKeys.add(primaryKeyValue);
+            //primaryKeys.add(primaryKeyValue);
+            primaryKeyIndex.addToIndex(primaryKeyValue, row);
         }
         rows.add(row);
     }
 
     public void deleteRow(Object primaryKeyValue){
-        rows.removeIf(row -> row.getColumnValue(primaryKeyCol).equals(primaryKeyValue));
-        primaryKeys.remove(primaryKeyValue);
+        //rows.removeIf(row -> row.getColumnValue(primaryKeyCol).equals(primaryKeyValue));
+        //primaryKeys.remove(primaryKeyValue);
+        Row rowToDelete = primaryKeyIndex.getFromIndex(primaryKeyValue);
+        if (rowToDelete != null) {
+            rows.remove(rowToDelete);
+            primaryKeyIndex.removeFromIndex(primaryKeyValue);
+        }
     }
 
     public List<Row> selectAll(){
         return rows;
     }
 
-    public void updateRow(Object primaryKeyValue, Column column, Object newValue){
-        for(Row row: rows){
-            if(row.getColumnValue(primaryKeyCol).equals(primaryKeyValue)){
-                row.setColumnValue(column, newValue);
-            }
+    public void updateRow(Object primaryKeyValue, Column column, Object newValue) {
+        Row rowToUpdate = primaryKeyIndex.getFromIndex(primaryKeyValue);
+        if (rowToUpdate != null) {
+            rowToUpdate.setColumnValue(column, newValue);
+            primaryKeyIndex.updateIndex(primaryKeyValue, rowToUpdate);
         }
     }
 
@@ -56,6 +64,10 @@ public class Table {
             }
         }
         return null;
+    }
+
+    public Row selectByPrimaryKey(Object primaryKeyValue) {
+        return primaryKeyIndex.getFromIndex(primaryKeyValue);
     }
 
     @Override
